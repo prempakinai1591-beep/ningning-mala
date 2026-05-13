@@ -648,23 +648,42 @@ function scrollToCat(i) {
 
 function sendOrder() {
     const table = document.getElementById('tableNumber').value;
-    const cook = document.getElementById('cookType').value;
-    const cookTxt = cook === 'grill' ? '🔥 ปิ้งย่าง' : '🍲 ต้มซุป';
-    const note = document.getElementById('note').value;
+    const phone = document.getElementById('customerPhone').value; // นี่คือส่วนที่ดึงเบอร์โทรศัพท์
+    const cook = document.getElementById('cookType').value === 'grill' ? 'ปิ้งย่าง' : 'ต้มชาบู';
+    const note = document.getElementById('note').value || '-';
     
-    let items = ""; for(let k in cart) items += `- ${k} [${cart[k]} ไม้]\n`;
-
-    let details = "";
-    if (cook === 'grill') {
-        details = `🌶️ ความเผ็ด: ${document.getElementById('spicy').value}\n`;
-    } else if (cook === 'soup') {
-        const soupName = document.getElementById('soupType').options[document.getElementById('soupType').selectedIndex].text;
-        const sauceName = document.getElementById('sauceType').value;
-        details = `🥣 ซุป: ${soupName}\n🍯 น้ำจิ้ม: ${sauceName}\n`;
+    let itemsText = "";
+    let totalQty = 0;
+    for (let k in cart) {
+        itemsText += `- ${k} (${cart[k]} ไม้)\n`;
+        totalQty += cart[k];
     }
 
-    const msg = `🔴 *ออเดอร์จากคุณ: ${table}*\n👨‍🍳 รูปแบบ: ${cookTxt}\n${details}${items}` + (note ? `✍️ หมายเหตุ: ${note}\n` : "") + `💰 *ยอดรวม: ${document.getElementById('finalTotal').innerText}*`;
-    window.location.href = `https://line.me/R/oaMessage/@402wefnq/?${encodeURIComponent(msg)}`;
+    // 2. จัดรูปแบบข้อความที่จะส่งเข้า LINE
+    let message = `📌 ออเดอร์ใหม่จาก: ${table}\n`;
+    message += `📞 เบอร์โทร: ${phone}\n`; // เพิ่มบรรทัดนี้ ข้อมูลเบอร์โทรจึงจะไปปรากฏในไลน์
+    message += `🍳 รูปแบบ: ${cook}\n`;
+    
+    if(document.getElementById('cookType').value === 'grill') {
+        message += `🔥 ความเผ็ด: ${document.getElementById('spicy').value}\n`;
+    } else {
+        const soupSelect = document.getElementById('soupType');
+        const soupName = soupSelect.options[soupSelect.selectedIndex].text;
+        const sauceName = document.getElementById('sauceType').value;
+        message += `🍲 น้ำซุป: ${soupName}\n`;
+        message += `🍯 น้ำจิ้ม: ${sauceName}\n`;
+    }
+    
+    message += `\n📝 รายการอาหาร:\n${itemsText}`;
+    message += `\n✨ รวมทั้งหมด: ${totalQty} ไม้`;
+    message += `\n💰 ยอดสุทธิ: ${document.getElementById('finalTotal').innerText}`;
+    message += `\n💭 หมายเหตุ: ${note}`;
+
+    // 3. ส่งข้อมูลไปยัง LINE
+    // อย่าลืมเปลี่ยน @YOUR_ID เป็นไอดี LINE OA ของทางร้านนะครับ
+    const lineUrl = `https://line.me/R/oaMessage/@YOUR_ID/?${encodeURIComponent(message)}`;
+    
+    window.location.href = lineUrl;)}`;
 }
 fetchStock();
 </script>
