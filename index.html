@@ -341,6 +341,313 @@ function scrollToCat(i) {
 
 function sendOrder() {
     const table = document.getElementById('tableNumber').value;
+    .nav-bar { 
+      position: -webkit-sticky;
+      position: sticky; 
+      top: 0; 
+      background: rgba(17, 17, 17, 0.95); 
+      display: flex; 
+      overflow-x: auto; 
+      padding: 12px 10px; 
+      gap: 10px; 
+      z-index: 999; 
+      border-bottom: 1px solid #333; 
+      backdrop-filter: blur(10px);
+    }
+    .nav-bar::-webkit-scrollbar { display: none; }
+    .nav-item { 
+      background: #2a2a2a; padding: 8px 20px; border-radius: 25px; 
+      white-space: nowrap; font-size: 13px; cursor: pointer; color: #aaa; flex-shrink: 0; 
+      transition: all 0.2s; border: 1px solid #333;
+    }
+    .nav-item.active { background: var(--primary); color: white; font-weight: 600; border-color: var(--primary); }
+
+    .category-title { 
+      font-size: 17px; color: var(--gold); margin: 30px 0 15px; 
+      border-left: 5px solid var(--primary); padding-left: 12px; 
+      scroll-margin-top: 80px; font-weight: 600;
+    }
+
+    .page { display: none; padding: 10px; width: 100%; max-width: 480px; margin: 0 auto; padding-bottom: 120px; }
+    .page.active { display: block; }
+    .menu-item { background: var(--card); padding: 12px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; border: 1px solid #2a2a2a; position: relative; }
+    .item-img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; background: #333; }
+    .item-info { flex: 1; }
+    .item-info span { font-size: 15px; font-weight: 400; }
+    .item-price { color: var(--primary); font-size: 14px; font-weight: 600; margin-top: 2px; }
+    
+    .controls { display: flex; align-items: center; gap: 12px; background: #2a2a2a; padding: 6px 12px; border-radius: 10px; border: 1px solid #383838; }
+    .btn-qty { border: none; border-radius: 8px; width: 28px; height: 28px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+    .minus { background: #444; color: white; }
+    .plus { background: var(--primary); color: white; }
+    
+    .bottom-bar { position: fixed; bottom: 0; width: 100%; left: 0; background: rgba(17, 17, 17, 0.95); padding: 15px; border-top: 1px solid #333; z-index: 1000; display: flex; justify-content: center; backdrop-filter: blur(10px); }
+    .submit-btn { width: 100%; max-width: 450px; background: var(--primary); color: white; padding: 16px; font-size: 17px; border-radius: 14px; border: none; font-weight: 600; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3); }
+    .submit-btn:active { transform: scale(0.98); }
+
+    .sold-out { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
+    .sold-out-tag { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); background: #555; color: white; padding: 4px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #777; z-index: 10; }
+    
+    .box { background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #333; }
+    label { font-size: 14px; color: #bbb; margin-left: 5px; margin-top: 10px; display: block; }
+    input, select, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #444; background: #222; color: white; margin: 8px 0 18px 0; font-family: 'Kanit'; font-size: 15px; outline: none; }
+    input:focus { border-color: var(--primary); }
+    
+    .back-btn { background: transparent; margin-top: 10px; width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #444; color: #888; font-family: 'Kanit'; cursor: pointer; }
+    .qr-img { width: 220px; max-width: 100%; height: auto; display: block; margin: 15px auto; background: white; padding: 15px; border-radius: 15px; }
+    .summary-item { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 10px; border-bottom: 1px dotted #444; padding-bottom: 8px; }
+    
+    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9000; backdrop-filter: blur(5px); }
+    #promoPopup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; color: #111; padding: 35px 25px; border-radius: 28px; z-index: 9001; text-align: center; width: 88%; max-width: 380px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+  </style>
+</head>
+<body>
+
+<div id="overlay"></div>
+<div id="promoPopup">
+    <h2 style="color: var(--primary); margin-top: 0; font-size: 24px;">🎉 โปรโมชั่น 10 แถม 1</h2>
+    <p id="promoTxt" style="font-size: 16px; color: #444; line-height: 1.6;"></p>
+    <button class="submit-btn" onclick="backToSelectFree()">เลือกรับของแถมฟรีได้เลย 🍢</button>
+    <button class="back-btn" onclick="confirmNoFree()" style="border:none; color:#999; font-size:13px; text-decoration: underline;">ไม่รับสิทธิ์ไม้แถม ยืนยันคำสั่งซื้อเดิม</button>
+</div>
+
+<div id="page1" class="page active">
+  <header>
+    <img src="https://i.ibb.co/1tCT00Kg/Malaningning-20250822-140531-0000.png" alt="โลโก้หม่าล่านิ้งนิ้ง" class="shop-logo">
+    <h1>หม่าล่านิ้งนิ้ง</h1>
+    <div id="stock-loading">⏳ กรุณารออัปเดตสักครู่ ⌛</div>
+  </header>
+
+  <div class="promo-banner">
+    <h2>🔥 โปรโมชั่นจัดเต็ม 🔥</h2>
+    <p><b>ปิ้งย่าง :</b> 10 ไม้ แถมฟรี 1 ไม้<br><b>ต้มซุป :</b> ครบ 100.- ฟรีค่าน้ำซุปทันที</p>
+  </div>
+
+  <div class="nav-bar">
+    <div class="nav-item active" onclick="scrollToCat(0)">🍢 ลูกชิ้น & แปรรูป</div>
+    <div class="nav-item" onclick="scrollToCat(1)">🥩 เนื้อสัตว์เน้นๆ</div>
+    <div class="nav-item" onclick="scrollToCat(2)">🥬 ผักสดสะอาด</div>
+    <div class="nav-item" onclick="scrollToCat(3)">🍲 เครื่องต้ม & เส้น</div>
+  </div>
+
+  <div id="menu-content"></div>
+</div>
+
+<div id="page2" class="page">
+  <h2 style="text-align: center; color: var(--primary); margin-bottom: 20px;">📋 ยืนยันความอร่อย</h2>
+  <div class="box">
+    <label>📍 ข้อมูลลูกค้า / สถานที่ / เลขโต๊ะ</label>
+    <input type="text" id="tableNumber" placeholder="ระบุที่อยู่ เลขโต๊ะ หรือ ชื่อของคุณ">
+    <label>📞 เบอร์โทรศัพท์ติดต่อ
+        </label>
+    <input type="text" id="customerPhone" placeholder="ระบุเบอร์โทรศัพท์ของคุณ">
+    
+    <label>👨‍🍳 เลือกรูปแบบความฟิน</label>
+    <select id="cookType" onchange="toggleCook()">
+      <option value="">- เลือกรูปแบบการปรุง -</option>
+      <option value="grill">ปิ้งย่าง (10 แถม 1)</option>
+      <option value="soup">ต้มชาบู (100.- ฟรีน้ำซุป)</option>
+    </select>
+    
+    <div id="grillOpt" style="display:none">
+        <label>🔥 ระดับความเผ็ด</label>
+        <select id="spicy">
+            <option>เผ็ดมาก</option>
+            <option>เผ็ดกลาง</option>
+            <option>เผ็ดน้อย</option>
+            <option>ไม่ใส่พริก</option>
+        </select>
+    </div>
+    
+    <div id="soupOpt" style="display:none">
+        <label>🍲 เลือกน้ำซุปที่ชอบ</label>
+        <select id="soupType">
+            <option value="10">ซุปชาบูน้ำดำ (10฿)</option>
+            <option value="10">ซุปกระดูกหมูเข้มข้น (10฿)</option>
+            <option value="15">ซุปหม่าล่าเผ็ดชา (15฿)</option>
+            <option value="15">ซุปหม่าล่านมเผ็ดนัว (15฿)</option>
+        </select>
+        
+        <label>🍯 เลือกน้ำจิ้มฟรี (เฉพาะต้มซุป)</label>
+        <select id="sauceType">
+            <option value="สุกี้">น้ำจิ้มสุกี้ต้นตำรับ</option>
+            <option value="สุกี้หม่าล่า">น้ำจิ้มสุกี้หม่าล่า (รสเผ็ด)</option>
+            <option value="สุกี้งาคั่ว">น้ำจิ้มสุกี้งาคั่ว (หอมนัว)</option>
+        </select>
+    </div>
+    
+    <label>✍️ หมายเหตุถึงร้าน</label>
+    <textarea id="note" placeholder="เช่น ขอพริกแยก ฯลฯ" rows="2"></textarea>
+    
+    <div id="orderList"></div>
+  </div>
+  <button class="back-btn" onclick="showPage(1)">⬅️ เลือกเมนูเพิ่มเติม</button>
+</div>
+
+<div id="page3" class="page">
+  <h2 style="text-align: center; color: var(--primary); margin-bottom: 20px;">💰 สรุปยอดชำระ</h2>
+  <div class="box" style="text-align: center;">
+    <p style="color: #eee; font-size: 14px;">ชำระเงินสะดวกผ่าน QR Code</p>
+    <img id="qrImage" src="" class="qr-img">
+    <div id="finalTotal" style="font-size: 36px; color: var(--gold); font-weight: 600; margin: 10px 0;"></div>
+    <div id="promoNotice" style="background: rgba(6, 199, 85, 0.1); padding: 15px; border-radius: 15px; display: none; border: 1px solid var(--line); color: #fff; font-size: 14px;"></div>
+  </div>
+  <button class="back-btn" onclick="showPage(2)">⬅️ แก้ไขข้อมูลออเดอร์</button>
+</div>
+
+<div class="bottom-bar">
+  <button id="mainBtn" class="submit-btn" onclick="handleButtonClick()">เลือกความอร่อย (0 รายการ)</button>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxg-ao0ZswIc_h8ywzi8DOuXPW-t6an6EHuJT5rOVrgBLRLPWqilVapzoCR3et0dSR4/exec";
+let cart = {}; let stockStatus = {}; let currentPage = 1; let lastPromoCount = 0;
+
+const menuData = [
+    { title: "ลูกชิ้น & ของแปรรูป", items: [
+        {name: "กุ้งพันสาหร่าย", img: "https://i.ibb.co/FLcTpmZG/IMG-20260511-092232.jpg"},
+        {name: "เต้าหู้ปลา", img: "https://i.ibb.co/XxjvsqDB/IMG-20260511-093020.jpg"},
+        {name: "เต้าหู้หมู", img: "https://i.ibb.co/jvCPfvRw/IMG-20260512-143509.jpg"}, {name: "ปูอัด", img: "https://i.ibb.co/HTVvGgJv/IMG-20260512-143802.jpg"}, {name: "ไส้กรอกหนังกรอบ", img: "https://i.ibb.co/hRKt7YwL/IMG-20260512-200012.jpg"},
+        {name: "ไส้กรอกไส้อั่ว", img: "https://i.ibb.co/ZRYs7R7C/IMG-20260512-202253.jpg"}, {name: "เต้าหู้มันกุ้ง", img: "https://i.ibb.co/20zhRZ8G/IMG-20260512-202916.jpg"}, {name: "ไส้กรอกแดง", img: "https://i.ibb.co/twrChLJw/IMG-20260512-203805.jpg"}
+    ]},
+    { title: "เนื้อสัตว์เน้นๆ", items: [
+        {name: "เนื้อโคขุน", img: "https://i.ibb.co/C5RbyNbz/IMG-20260513-001759.jpg"}, {name: "เนื้อหมู", img: "https://i.ibb.co/My6ZTVh4/IMG-20260513-002549.jpg"}, {name: "หมูสามชั้น", img: "https://i.ibb.co/353sjFQ1/IMG-20260513-083228.jpg"},
+        {name: "ไส้หมูกลาง", img: "https://i.ibb.co/qL0wjktL/IMG-20260513-083435.jpg"}, {name: "ไส้ใหญ่หมู", img: "https://i.ibb.co/hxY1WmgR/IMG-20260513-083703.jpg"}, {name: "เอ็นไก่", img: "https://i.ibb.co/nN02P94n/IMG-20260513-084055.png"},
+        {name: "เบคอนพันเห็ด", img: "https://i.ibb.co/v4nS3pJw/IMG-20260513-084842.jpg"}, {name: "เบคอนพันไส้กรอก", img: "https://i.ibb.co/S4PwLtC8/IMG-20260513-085117.jpg"}, {name: "หมึกกรอบ", img: "https://i.ibb.co/JWVRBgNL/IMG-20260513-085424.jpg"},
+        {name: "สไบนาง", img: "https://i.ibb.co/d15mDYV/IMG-20260513-085625.jpg"}, {name: "ปลาดอลลี่", img: "https://i.ibb.co/tN8Y0g4/IMG-20260513-085824.jpg"}, {name: "ปลาแซลมอน", img: "https://i.ibb.co/GvHXBgkd/salmon-belly-2.webp"},
+        {name: "คางหมึก", img: "https://i.ibb.co/qM3chndz/IMG-20260513-090349.jpg"}, {name: "ปลาไข่", img: "https://i.ibb.co/CK2drHcr/IMG-20260513-090534.jpg"}
+    ]},
+    { title: "ผักสดสะอาด", items: [
+        {name: "กระเจี๊ยบเขียว", img: "https://i.ibb.co/MyG28sHn/IMG-20260513-090834.jpg"}, {name: "เห็ดออรินจิ", img: "https://i.ibb.co/gLG6CpbG/IMG-20260513-091112.jpg"}, {name: "เห็ดหอม", img: "https://i.ibb.co/k6QVDKwk/IMG-20260513-091340.jpg"}, {name: "บุกแผ่นกรุบ", img: "https://i.ibb.co/YF6V8wLQ/IMG-20260513-091515.jpg"}
+    ]},
+    { title: "เครื่องต้ม & เส้นต่างๆ", items: [
+        {name: "ไข่ไก่", img: "https://i.ibb.co/3m0swn7M/IMG-20260513-091946.jpg"}, {name: "เส้นดำรากเฟิร์น", img: "https://i.ibb.co/21FyXMbP/IMG-20260513-092407.jpg"}, {name: "เส้นเล็กมันเทศ", img: "https://i.ibb.co/ZR6DZH3b/IMG-20260513-092607.jpg"},
+        {name: "เส้นใหญิมันหนึบ", img: "https://i.ibb.co/sp5cJ2MV/IMG-20260513-092821.jpg"}, {name: "เห็ดชิเมจิ", img: "https://i.ibb.co/N68WCtGD/IMG-20260513-093254.jpg"}, {name: "สาหร่ายวากาเมะ", img: "https://i.ibb.co/dwHGvF15/IMG-20260513-093430.jpg"},
+        {name: "เส้นขาวมันกรอบ", img: "https://i.ibb.co/jZGsS94S/IMG-20260513-093624.jpg"}, {name: "ผักกวางตุ้ง", img: "https://i.ibb.co/fVGPPdBH/IMG-20260513-094148.jpg"}, {name: "ต้นอ่อนทานตะวัน", img: "https://i.ibb.co/7d5xVx1V/IMG-20260513-094343.png"},
+        {name: "ฟองเต้าหู้ม้วน", img: "https://i.ibb.co/4g3J0hyg/IMG-20260513-094458.jpg"}, {name: "ฟองเต้าหู้ก้อน", img: "https://i.ibb.co/bj1v7qYB/IMG-20260513-094614.jpg"}, {name: "ฟองเต้าหู้แผ่น", img: "https://i.ibb.co/gLMBJwxb/IMG-20260513-094754.jpg"},
+        {name: "วุ้นเส้น", img: "https://i.ibb.co/FkrCwDdK/IMG-20260513-094943.jpg"}, {name: "เส้นหมี่หยก", img: "https://i.ibb.co/n8KJzwjY/IMG-20260513-095000.jpg"}
+    ]}
+];
+
+async function fetchStock() {
+    try {
+        const res = await fetch(SCRIPT_URL);
+        stockStatus = await res.json();
+        document.getElementById('stock-loading').innerText = "✅ อัปเดตเมนูพร้อมเสิร์ฟแล้ว";
+        renderMenu();
+    } catch (e) {
+        document.getElementById('stock-loading').innerText = "⚠️ กำลังใช้งานโหมดออฟไลน์";
+        renderMenu();
+    }
+}
+
+function renderMenu() {
+    let html = ''; let totalQty = 0;
+    menuData.forEach((cat, idx) => {
+        html += `<div id="cat-${idx}"><div class="category-title">${cat.title}</div>`;
+        cat.items.forEach(item => {
+            const qty = cart[item.name] || 0; totalQty += qty;
+            const isOut = stockStatus[item.name] === true;
+            html += `<div class="menu-item ${isOut ? 'sold-out' : ''}">
+                ${isOut ? '<div class="sold-out-tag">หมดชั่วคราว</div>' : ''}
+                <img src="${item.img}" class="item-img" onerror="this.src='https://via.placeholder.com/60/333/fff?text=Food'">
+                <div class="item-info"><span>${item.name}</span><br><div class="item-price">10.-</div></div>
+                ${!isOut ? `<div class="controls">
+                    <button class="btn-qty minus" onclick="updateQty('${item.name}',-1)">−</button>
+                    <span style="font-weight:600; width:20px; text-align:center;">${qty}</span>
+                    <button class="btn-qty plus" onclick="updateQty('${item.name}',1)">+</button>
+                </div>` : ''}
+            </div>`;
+        });
+        html += `</div>`;
+    });
+    document.getElementById('menu-content').innerHTML = html;
+    if(currentPage === 1) document.getElementById('mainBtn').innerHTML = `สรุปรายการความอร่อย (${totalQty} ชิ้น)`;
+}
+
+function updateQty(name, change) {
+    cart[name] = (cart[name] || 0) + change;
+    if (cart[name] <= 0) delete cart[name];
+    renderMenu();
+}
+
+function toggleCook() {
+    const cook = document.getElementById('cookType').value;
+    document.getElementById('grillOpt').style.display = cook === 'grill' ? 'block' : 'none';
+    document.getElementById('soupOpt').style.display = cook === 'soup' ? 'block' : 'none';
+}
+
+function showPage(n) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page'+n).classList.add('active');
+    currentPage = n; window.scrollTo(0,0);
+    const btn = document.getElementById('mainBtn');
+    if(n === 1) { renderMenu(); btn.style.background = "var(--primary)"; }
+    else if(n === 2) { btn.innerText = "ดูสรุปยอดเงินชำระ"; btn.style.background = "var(--primary)"; renderSummary(); }
+    else if(n === 3) { btn.innerText = "🚀 ส่งออเดอร์ให้ร้านทาง LINE"; btn.style.background = "var(--line)"; calculateFinal(); }
+}
+
+function handleButtonClick() {
+    if(currentPage === 1) {
+        if(Object.keys(cart).length === 0) return alert('กรุณาเลือกเมนูที่ต้องการก่อนครับ');
+        showPage(2);
+    } else if(currentPage === 2) {
+        if(!document.getElementById('tableNumber').value) return alert('กรุณาระบุเลขโต๊ะ หรือ ชื่อของคุณครับ');
+        const cook = document.getElementById('cookType').value;
+        if(!cook) return alert('กรุณาเลือกรูปแบบการปรุงด้วยครับ');
+        let total = 0; for(let k in cart) total += cart[k];
+        let promoTier = Math.floor(total / 10);
+        if(cook === 'grill' && promoTier > 0 && lastPromoCount < (promoTier * 10)) {
+            document.getElementById('promoTxt').innerHTML = `คุณเลือกสั่งทั้งหมด <b>${total} ไม้</b><br>ว้าว! คุณได้รับสิทธิ์แถมฟรีถึง <b>${promoTier} ไม้</b><br>ไปเลือกของอร่อยเพิ่มได้เลย!`;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('promoPopup').style.display = 'block';
+            lastPromoCount = total; return; 
+        }
+        showPage(3);
+    } else { sendOrder(); }
+}
+
+function renderSummary() {
+    let html = '<p style="font-weight:600; color:var(--gold); margin-top:15px;">รายการที่คุณเลือก:</p>';
+    for (let k in cart) html += `<div class="summary-item"><span>${k}</span><span>x ${cart[k]}</span></div>`;
+    document.getElementById('orderList').innerHTML = html;
+}
+
+function calculateFinal() {
+    let foodTotal = 0, totalQty = 0;
+    for (let k in cart) { foodTotal += 10*cart[k]; totalQty += cart[k]; }
+    let final = foodTotal; let noticeHtml = "";
+    const cook = document.getElementById('cookType').value;
+    const noticeEl = document.getElementById('promoNotice');
+    if(cook === 'grill') {
+        let tiers = Math.floor(totalQty / 11); 
+        if(tiers > 0) { final -= (tiers * 10); noticeHtml = `<b style="color:#06C755;">✨ อิ่มคุ้มด้วยโปร 10 แถม 1</b><br>ระบบหักส่วนลดของแถม ${tiers} ไม้ เรียบร้อยครับ`; noticeEl.style.display = 'block'; }
+        else { noticeEl.style.display = 'none'; }
+    } else if(cook === 'soup') {
+        let soupPrice = parseInt(document.getElementById('soupType').value);
+        if(foodTotal >= 100) { noticeHtml = `<b style="color:#06C755;">✨ โปรฟินกับซุปร้อนๆ</b><br>สั่งครบ 100.- ฟรีค่าน้ำซุปให้เรียบร้อย!`; noticeEl.style.display = 'block'; }
+        else { final += soupPrice; noticeEl.style.display = 'none'; }
+    }
+    document.getElementById('qrImage').src = `https://promptpay.io/0809731874/${final}.png`;
+    document.getElementById('finalTotal').innerText = final + " บาท";
+    noticeEl.innerHTML = noticeHtml;
+}
+
+function backToSelectFree() { document.getElementById('overlay').style.display = 'none'; document.getElementById('promoPopup').style.display = 'none'; showPage(1); }
+function confirmNoFree() { document.getElementById('overlay').style.display = 'none'; document.getElementById('promoPopup').style.display = 'none'; showPage(3); }
+
+function scrollToCat(i) {
+    const target = document.getElementById('cat-'+i);
+    if(target) {
+        window.scrollTo({ top: target.offsetTop - 60, behavior: 'smooth' });
+        document.querySelectorAll('.nav-item').forEach((item, idx) => {
+            if(idx === i) item.classList.add('active'); else item.classList.remove('active');
+        });
+    }
+}
+
+function sendOrder() {
+    const table = document.getElementById('tableNumber').value;
     const cook = document.getElementById('cookType').value;
     const cookTxt = cook === 'grill' ? '🔥 ปิ้งย่าง' : '🍲 ต้มซุป';
     const note = document.getElementById('note').value;
