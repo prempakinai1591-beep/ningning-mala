@@ -393,8 +393,7 @@ function sendOrder() {
     msg += `\n✍️ หมายเหตุ: ${note}\n`;
     msg += `💰 ยอดรวมที่ต้องชำระ: ${finalPrice}`;
 
-    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
-    window.location.href = lineUrl;
+    const lineOA_Link = "[https://line.me/ti/p/@402wefnq](https://line.me/ti/p/@402wefnq)";
 }
 
 fetchStock();
