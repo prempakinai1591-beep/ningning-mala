@@ -336,4 +336,69 @@ function calculateFinal() {
     } else if(cook === 'soup') {
         let soupPrice = parseInt(document.getElementById('soupType').value || 0);
         if(foodTotal >= 100) { noticeHtml = `<b style="color:#06C755;">✨ โปรฟินกับซุปร้อนๆ</b><br>สั่งครบ 100.- ฟรีค่าน้ำซุปให้เรียบร้อย!`; noticeEl.style.display = 'block'; }
-        else { final += soupPrice
+        else { final += soupPrice; noticeEl.style.display = 'none'; }
+    }
+    const qrUrl = `https://promptpay.io/0809731874/${final}.png`;
+    document.getElementById('qrImage').src = qrUrl;
+    document.getElementById('finalTotal').innerText = final + " บาท";
+    noticeEl.innerHTML = noticeHtml;
+}
+
+function downloadQR() {
+    const qrSrc = document.getElementById('qrImage').src;
+    const link = document.createElement('a');
+    link.href = qrSrc;
+    link.download = 'Malaningning_Payment_QR.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function backToSelectFree() { document.getElementById('overlay').style.display = 'none'; document.getElementById('promoPopup').style.display = 'none'; showPage(1); }
+function confirmNoFree() { document.getElementById('overlay').style.display = 'none'; document.getElementById('promoPopup').style.display = 'none'; showPage(3); }
+
+function scrollToCat(i) {
+    const target = document.getElementById('cat-'+i);
+    if(target) {
+        window.scrollTo({ top: target.offsetTop - 60, behavior: 'smooth' });
+        document.querySelectorAll('.nav-item').forEach((item, idx) => {
+            if(idx === i) item.classList.add('active'); else item.classList.remove('active');
+        });
+    }
+}
+
+function sendOrder() {
+    const table = document.getElementById('tableNumber').value;
+    const phone = document.getElementById('customerPhone').value || '-';
+    const cook = document.getElementById('cookType').value;
+    const note = document.getElementById('note').value || '-';
+    const finalPrice = document.getElementById('finalTotal').innerText;
+    
+    let msg = `🍢 ออเดอร์ใหม่จาก หม่าล่านิ้งนิ้ง 🍢\n`;
+    msg += `📍 ลูกค้า/โต๊ะ: ${table}\n`;
+    msg += `📞 เบอร์โทร: ${phone}\n`;
+    msg += `👨‍🍳 รูปแบบ: ${cook === 'grill' ? 'ปิ้งย่าง' : 'ต้มชาบู'}\n`;
+    
+    if(cook === 'grill') {
+        msg += `🔥 ความเผ็ด: ${document.getElementById('spicy').value}\n`;
+    } else {
+        const s = document.getElementById('soupType');
+        msg += `🍲 น้ำซุป: ${s.options[s.selectedIndex].text}\n`;
+        msg += `🍯 น้ำจิ้ม: ${document.getElementById('sauceType').value}\n`;
+    }
+    
+    msg += `\n📝 รายการอาหาร:\n`;
+    for(let k in cart) { msg += `- ${k} (${cart[k]} ไม้)\n`; }
+    
+    msg += `\n✍️ หมายเหตุ: ${note}\n`;
+    msg += `💰 ยอดรวมที่ต้องชำระ: ${finalPrice}`;
+
+    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
+    window.location.href = lineUrl;
+}
+
+fetchStock();
+</script>
+
+</body>
+</html>
